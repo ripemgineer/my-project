@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boost Point Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: print-shop storefront — CMYK process colours as the brand system,
+   crop marks + registration target as the recurring detail, catalogue grid with category rail. */
+:root {
+  --paper: #f6f7f9;
+  --sheet: #ffffff;
+  --ink: #15171d;
+  --ink-2: #4a4f5c;
+  --ink-3: #7f8595;
+  --rule: #dfe2e8;
+  --c: #00a0e3;   /* process cyan */
+  --m: #e5007e;   /* process magenta — the accent */
+  --y: #ffd400;   /* process yellow */
+  --k: #15171d;
+  --accent: var(--m);
+  --accent-ink: #ffffff;
+  --tint-c: #e3f4fc;
+  --tint-m: #fde6f2;
+  --tint-y: #fff7cc;
+  --tint-k: #e9eaee;
+  --tint-v: #ece8fb;
+  --ok: #1a8a4a;
+  --shadow: 0 1px 2px rgba(21,23,29,.06), 0 8px 24px rgba(21,23,29,.08);
+  --f-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #111319; --sheet: #1a1d25; --ink: #eef0f4; --ink-2: #b4b9c6; --ink-3: #868c9b; --rule: #2b2f3a;
+  --k: #eef0f4; --tint-c: #0f2b38; --tint-m: #3a1229; --tint-y: #36300d; --tint-k: #262a33; --tint-v: #241f3d;
+  --ok: #4fc883; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --paper: #111319; --sheet: #1a1d25; --ink: #eef0f4; --ink-2: #b4b9c6; --ink-3: #868c9b; --rule: #2b2f3a;
+  --k: #eef0f4; --tint-c: #0f2b38; --tint-m: #3a1229; --tint-y: #36300d; --tint-k: #262a33; --tint-v: #241f3d;
+  --ok: #4fc883; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 15px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; }
+img, svg { max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.08; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+.eyebrow { font: 600 11px/1 var(--f-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--ink-3); }
+.mono { font-family: var(--f-mono); }
+[hidden] { display: none !important; }
+
+/* Header */
+.topbar { background: var(--ink); color: var(--paper); font-size: 13px; }
+.topbar .wrap { display: flex; gap: 16px; justify-content: space-between; padding-block: 8px; flex-wrap: wrap; }
+.topbar .cmyk { display: inline-flex; gap: 4px; vertical-align: middle; margin-right: 8px; }
+.topbar .cmyk i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+header.site { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--sheet) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+header.site .wrap { display: flex; align-items: center; gap: 20px; padding-block: 14px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); flex-shrink: 0; }
+.logo b { font: 800 22px/1 var(--f-display); letter-spacing: -0.03em; }
+.logo b span { color: var(--accent); }
+.search { flex: 1; min-width: 0; position: relative; }
+.search input { width: 100%; padding: 11px 14px 11px 40px; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper); }
+.search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-3); }
+nav.main { display: flex; gap: 20px; font-weight: 600; font-size: 14px; }
+nav.main a { color: var(--ink-2); text-decoration: none; }
+nav.main a:hover { color: var(--ink); }
+.cart-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--ink); color: var(--paper); font-weight: 600; flex-shrink: 0; }
+.cart-btn .count { min-width: 22px; height: 22px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); font: 600 12px/22px var(--f-mono); text-align: center; padding-inline: 6px; }
+.cart-btn.bump { animation: bump .35s ease; }
+@keyframes bump { 50% { transform: scale(1.08); } }
+
+/* Hero */
+.hero { padding-block: 56px 40px; }
+.hero .wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+.hero h1 { font-size: clamp(40px, 6.4vw, 76px); font-weight: 800; letter-spacing: -0.035em; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p.lead { font-size: 18px; color: var(--ink-2); max-width: 34em; margin: 20px 0 28px; }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 22px; border-radius: 999px; border: 1px solid transparent; font-weight: 700; text-decoration: none; font-size: 15px; transition: transform .15s ease, background .15s ease; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, black); }
+.btn-ghost { border-color: var(--rule); color: var(--ink); background: var(--sheet); }
+.btn-ghost:hover { border-color: var(--ink-3); }
+.btn-block { width: 100%; }
+.hero-stats { display: flex; gap: 32px; margin-top: 36px; flex-wrap: wrap; }
+.hero-stats div b { display: block; font: 700 26px/1 var(--f-display); }
+.hero-stats div span { font-size: 13px; color: var(--ink-3); }
+
+.press { position: relative; aspect-ratio: 1 / 1; max-width: 100%; }
+.press .sheet { position: absolute; inset: 8%; background: var(--sheet); border-radius: 4px; box-shadow: var(--shadow); overflow: hidden; }
+.press .dots { position: absolute; inset: 0; display: grid; place-items: center; }
+.press .dots i { position: absolute; width: 46%; aspect-ratio: 1; border-radius: 50%; mix-blend-mode: multiply; animation: drift 9s ease-in-out infinite; }
+:root[data-theme="dark"] .press .dots i { mix-blend-mode: screen; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .press .dots i { mix-blend-mode: screen; } }
+.press .dots i:nth-child(1) { background: var(--c); transform: translate(-18%, -12%); }
+.press .dots i:nth-child(2) { background: var(--m); transform: translate(18%, -12%); animation-delay: -3s; }
+.press .dots i:nth-child(3) { background: var(--y); transform: translate(0, 18%); animation-delay: -6s; }
+@keyframes drift { 50% { margin-left: 3%; margin-top: -2%; } }
+.press .label { position: absolute; left: 10%; right: 10%; bottom: 10%; display: flex; justify-content: space-between; font: 600 10px/1.3 var(--f-mono); color: var(--ink-3); text-transform: uppercase; letter-spacing: .1em; }
+.crop { position: absolute; width: 8%; height: 8%; border-color: var(--ink-3); border-style: solid; border-width: 0; }
+.crop.tl { top: 0; left: 0; border-right-width: 1px; border-bottom-width: 1px; }
+.crop.tr { top: 0; right: 0; border-left-width: 1px; border-bottom-width: 1px; }
+.crop.bl { bottom: 0; left: 0; border-right-width: 1px; border-top-width: 1px; }
+.crop.br { bottom: 0; right: 0; border-left-width: 1px; border-top-width: 1px; }
+.press .tag { position: absolute; top: 14%; left: 14%; background: var(--ink); color: var(--paper); font: 600 11px/1 var(--f-mono); padding: 8px 10px; border-radius: 4px; letter-spacing: .06em; }
+.strip { position: absolute; right: 14%; top: 14%; display: flex; }
+.strip i { width: 14px; height: 14px; display: block; }
+@media (prefers-reduced-motion: reduce) { .press .dots i { animation: none; } html { scroll-behavior: auto; } }
+
+/* Category tiles */
+.cats { padding-block: 16px 8px; }
+.cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.cat-tile { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; text-align: left; padding: 18px; border-radius: var(--r); border: 1px solid var(--rule); background: var(--sheet); transition: border-color .15s, transform .15s; }
+.cat-tile:hover { border-color: var(--ink-3); transform: translateY(-2px); }
+.cat-tile .ic { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; }
+.cat-tile b { font: 700 16px/1.2 var(--f-display); }
+.cat-tile span { font-size: 13px; color: var(--ink-3); }
+
+/* Shop */
+.shop { padding-block: 48px; }
+.shop-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.shop-head h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.shop-head .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.shop-head select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--sheet); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--sheet); font-weight: 600; font-size: 13px; color: var(--ink-2); display: inline-flex; gap: 8px; align-items: center; }
+.chip .n { font: 400 11px/1 var(--f-mono); color: var(--ink-3); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip[aria-pressed="true"] .n { color: var(--paper); opacity: .7; }
+.chip .sw { width: 8px; height: 8px; border-radius: 50%; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.card { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; text-align: left; padding: 0; transition: box-shadow .2s, transform .2s; }
+.card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.thumb { position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden; }
+.thumb svg.art { width: 46%; height: auto; }
+.thumb .crop { width: 14px; height: 14px; }
+.thumb .crop.tl { top: 10px; left: 10px; } .thumb .crop.tr { top: 10px; right: 10px; }
+.thumb .crop.bl { bottom: 10px; left: 10px; } .thumb .crop.br { bottom: 10px; right: 10px; }
+.badge { position: absolute; top: 12px; left: 32px; font: 600 10px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; padding: 5px 7px; border-radius: 4px; background: var(--ink); color: var(--paper); }
+.card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.card h3 { font: 700 17px/1.2 var(--f-display); }
+.card .spec { font: 400 11.5px/1.4 var(--f-mono); color: var(--ink-3); }
+.card .foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: 12px; }
+.price { font: 700 18px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.price small { font: 400 12px var(--f-body); color: var(--ink-3); margin-right: 4px; }
+.card .go { font-size: 13px; font-weight: 700; color: var(--accent); }
+.empty { padding: 48px; text-align: center; color: var(--ink-3); border: 1px dashed var(--rule); border-radius: var(--r); }
+
+/* Process */
+.process { padding-block: 56px; background: var(--sheet); border-block: 1px solid var(--rule); }
+.process h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 28px; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; counter-reset: step; }
+.step { border-top: 3px solid var(--ink); padding-top: 16px; }
+.step:nth-child(1) { border-color: var(--c); } .step:nth-child(2) { border-color: var(--m); }
+.step:nth-child(3) { border-color: var(--y); } .step:nth-child(4) { border-color: var(--k); }
+.step .eyebrow { margin-bottom: 8px; display: block; }
+.step b { font: 700 19px/1.2 var(--f-display); display: block; margin-bottom: 6px; }
+.step p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+/* Quote */
+.quote { padding-block: 56px; }
+.quote .box { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: var(--ink); color: var(--paper); border-radius: 16px; padding: 40px; }
+.quote h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.quote p { color: color-mix(in srgb, var(--paper) 75%, transparent); }
+.quote form { display: grid; gap: 12px; }
+.quote .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quote label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.quote input, .quote textarea, .quote select { padding: 11px 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--paper) 22%, transparent); background: color-mix(in srgb, var(--paper) 7%, transparent); color: var(--paper); }
+.quote select option { color: #15171d; }
+.quote .done { padding: 14px; border-radius: 8px; background: color-mix(in srgb, var(--paper) 10%, transparent); font-weight: 600; }
+
+footer.site { padding-block: 40px; color: var(--ink-3); font-size: 14px; }
+footer.site .wrap { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+footer.site b { color: var(--ink); display: block; margin-bottom: 8px; font-size: 14px; }
+footer.site ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+footer.site .legal { grid-column: 1 / -1; border-top: 1px solid var(--rule); padding-top: 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; }
+
+/* Overlay / modal / drawer */
+.scrim { position: fixed; inset: 0; background: rgba(10,12,16,.5); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.modal { position: fixed; z-index: 50; left: 50%; top: 50%; width: min(940px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; transform: translate(-50%, -48%); opacity: 0; pointer-events: none; background: var(--sheet); border-radius: 16px; box-shadow: var(--shadow); transition: opacity .2s, transform .2s; display: grid; grid-template-columns: 1fr 1fr; }
+.modal.on { opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }
+.modal .thumb { aspect-ratio: auto; min-height: 100%; }
+.modal .thumb svg.art { width: 52%; }
+.modal .detail { padding: 28px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.modal h2 { font-size: 30px; font-weight: 800; }
+.modal .desc { color: var(--ink-2); margin: 0; }
+.close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); display: grid; place-items: center; z-index: 2; }
+.opt { display: grid; gap: 8px; }
+.opt > span { font-size: 13px; font-weight: 700; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); font-size: 13px; font-weight: 600; }
+.seg button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.upload { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px dashed var(--ink-3); border-radius: 8px; font-size: 13px; color: var(--ink-2); }
+.upload input { display: none; }
+.upload label { font-weight: 700; color: var(--accent); cursor: pointer; white-space: nowrap; }
+.upload span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.totals { display: flex; justify-content: space-between; align-items: end; padding-top: 14px; border-top: 1px solid var(--rule); gap: 12px; }
+.totals .big { font: 800 30px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.totals .unit { font: 400 12px var(--f-mono); color: var(--ink-3); }
+.qty-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.qty-row button { display: grid; gap: 2px; text-align: left; }
+.qty-row button em { font-style: normal; font: 400 10.5px var(--f-mono); opacity: .7; }
+
+.drawer { position: fixed; z-index: 50; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); background: var(--sheet); box-shadow: var(--shadow); transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer.on { transform: none; }
+.drawer header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--rule); }
+.drawer header h2 { font-size: 22px; font-weight: 800; }
+.drawer .close { position: static; }
+.drawer .items { flex: 1; overflow: auto; padding: 8px 20px; }
+.line { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; padding-block: 14px; border-bottom: 1px solid var(--rule); align-items: start; }
+.line .mini { width: 56px; height: 56px; border-radius: 8px; display: grid; place-items: center; }
+.line .mini svg { width: 60%; }
+.line b { font: 700 15px/1.2 var(--f-display); display: block; }
+.line .spec { font: 400 11px/1.5 var(--f-mono); color: var(--ink-3); }
+.line .rm { border: 0; background: none; color: var(--ink-3); font-size: 12px; padding: 4px 0 0; text-decoration: underline; }
+.line .amt { font-weight: 700; font-variant-numeric: tabular-nums; }
+.drawer footer { padding: 18px 20px; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+.sum { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 14px; }
+.sum.total { color: var(--ink); font: 800 20px/1 var(--f-display); padding-top: 6px; }
+.drawer .checkout { display: grid; gap: 10px; }
+.drawer .checkout input, .drawer .checkout select { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); width: 100%; }
+.drawer .checkout .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.success { text-align: center; padding: 40px 20px; display: grid; gap: 12px; justify-items: center; }
+.success .tick { width: 56px; height: 56px; border-radius: 50%; background: var(--ok); color: #fff; display: grid; place-items: center; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--paper); padding: 12px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; opacity: 0; transition: .25s; z-index: 60; pointer-events: none; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 960px) {
+  nav.main { display: none; }
+  .hero .wrap { grid-template-columns: 1fr; gap: 24px; }
+  .press { max-width: 420px; justify-self: center; width: 100%; }
+  .cat-grid { grid-template-columns: repeat(3, 1fr); }
+  .steps { grid-template-columns: repeat(2, 1fr); }
+  .quote .box { grid-template-columns: 1fr; padding: 28px; }
+  footer.site .wrap { grid-template-columns: 1fr 1fr; }
+  .modal { grid-template-columns: 1fr; }
+  .modal .thumb { min-height: 200px; aspect-ratio: 16 / 9; }
+}
+@media (max-width: 600px) {
+  .wrap { padding-inline: 16px; }
+  header.site .wrap { flex-wrap: wrap; gap: 12px; }
+  .search { order: 3; flex-basis: 100%; }
+  .logo { margin-right: auto; }
+  .cart-btn .lbl { display: none; }
+  .hero { padding-block: 32px 24px; }
+  .cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .card .body { padding: 12px; }
+  .card h3 { font-size: 15px; }
+  .card .go { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .quote .row2 { grid-template-columns: 1fr; }
+  .topbar .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span><span class="cmyk"><i style="background:var(--c)"></i><i style="background:var(--m)"></i><i style="background:var(--y)"></i></span>Free artwork check on every order</span>
+  <span class="hide-sm">Same-day printing on orders before 12:00 · Call <span class="mono">+000 00 000 000</span></span>
+</div></div>
+
+<header class="site"><div class="wrap">
+  <a class="logo" href="#top" aria-label="Boost Point home">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+      <circle cx="17" cy="17" r="12" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="17" cy="17" r="5" fill="var(--m)"/>
+      <path d="M17 0v9M17 25v9M0 17h9M25 17h9" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <b>Boost<span>Point</span></b>
+  </a>
+  <label class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search banners, mugs, stickers…" aria-label="Search products">
+  </label>
+  <nav class="main"><a href="#shop">Shop</a><a href="#how">How it works</a><a href="#quote">Custom quote</a></nav>
+  <button class="cart-btn" id="cartBtn" aria-label="Open cart">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>
+    <span class="lbl">Cart</span><span class="count" id="cartCount">0</span>
+  </button>
+</div></header>
+
+<main id="top">
+<section class="hero"><div class="wrap">
+  <div>
+    <span class="eyebrow">Print · Promo · Signage</span>
+    <h1 style="margin-top:14px">Make your brand <em>impossible</em> to miss.</h1>
+    <p class="lead">Banners, roll-ups, stickers, mugs, UV printing and more. Pick a product, upload your artwork, and we print and deliver it. Our team checks every file before it goes to press.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#shop">Shop all products</a>
+      <a class="btn btn-ghost" href="#quote">Request a custom quote</a>
+    </div>
+    <div class="hero-stats">
+      <div><b id="statCount">50</b><span>products to order</span></div>
+      <div><b>24–72h</b><span>typical turnaround</span></div>
+      <div><b>1 pc</b><span>minimum on most items</span></div>
+    </div>
+  </div>
+  <div class="press" aria-hidden="true">
+    <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+    <div class="sheet">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <span class="tag">PROOF 01 · 300 DPI</span>
+      <span class="strip"><i style="background:var(--c)"></i><i style="background:var(--m)"></i><i style="background:var(--y)"></i><i style="background:var(--k)"></i></span>
+      <div class="label"><span>Bleed 3 mm</span><span>CMYK · Fogra39</span></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="cats"><div class="wrap">
+  <div class="cat-grid" id="catGrid"></div>
+</div></section>
+
+<section class="shop" id="shop"><div class="wrap">
+  <div class="shop-head">
+    <div><span class="eyebrow">Catalogue</span><h2 style="margin-top:8px" id="shopTitle">All products</h2></div>
+    <div class="tools">
+      <label class="eyebrow" for="sort">Sort</label>
+      <select id="sort">
+        <option value="pop">Most popular</option>
+        <option value="low">Price: low to high</option>
+        <option value="high">Price: high to low</option>
+        <option value="az">Name A–Z</option>
+      </select>
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="grid" id="grid"></div>
+</div></section>
+
+<section class="process" id="how"><div class="wrap">
+  <span class="eyebrow">How ordering works</span>
+  <h2 style="margin-top:8px">From file to finished print in four steps</h2>
+  <div class="steps">
+    <div class="step"><span class="eyebrow">Step 1</span><b>Choose your product</b><p>Pick size, material and quantity. The price updates as you go.</p></div>
+    <div class="step"><span class="eyebrow">Step 2</span><b>Upload artwork</b><p>PDF, AI, PSD, PNG or JPG. No design? Add our design service at checkout.</p></div>
+    <div class="step"><span class="eyebrow">Step 3</span><b>Approve your proof</b><p>We check bleed, resolution and colour, then send a digital proof for your OK.</p></div>
+    <div class="step"><span class="eyebrow">Step 4</span><b>Print &amp; deliver</b><p>Printed in-house and delivered to your door, or picked up from our shop.</p></div>
+  </div>
+</div></section>
+
+<section class="quote" id="quote"><div class="wrap"><div class="box">
+  <div>
+    <span class="eyebrow" style="color:inherit;opacity:.6">Big or unusual job?</span>
+    <h2 style="margin-top:10px">Get a custom quote within one working day</h2>
+    <p>Shop fronts, vehicle wraps, exhibition stands, event branding, bulk corporate gifts. Tell us what you need and we'll price it for you.</p>
+  </div>
+  <form id="quoteForm">
+    <div class="row2">
+      <label for="qName">Name<input id="qName" required placeholder="Your name"></label>
+      <label for="qPhone">Phone<input id="qPhone" required placeholder="+000 …"></label>
+    </div>
+    <label for="qType">Project type
+      <select id="qType"><option>Shop front / signage</option><option>Vehicle branding</option><option>Exhibition / event</option><option>Corporate gifts (bulk)</option><option>Something else</option></select>
+    </label>
+    <label for="qMsg">Details<textarea id="qMsg" rows="3" placeholder="Sizes, quantities, deadline…"></textarea></label>
+    <button class="btn btn-primary" type="submit">Send request</button>
+    <div class="done" id="quoteDone" hidden>Thanks! This is a prototype, so nothing was sent. On the live site, your request would go to the Boost Point sales team.</div>
+  </form>
+</div></div></section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <div><a class="logo" href="#top"><b>Boost<span>Point</span></b></a><p style="max-width:28em">Advertising and printing for businesses of every size. Large format, promotional products, stationery and signage, all under one roof.</p></div>
+  <div><b>Shop</b><ul id="footCats"></ul></div>
+  <div><b>Help</b><ul><li>Artwork guidelines</li><li>Delivery &amp; pickup</li><li>Returns</li><li>FAQ</li></ul></div>
+  <div><b>Contact</b><ul><li class="mono">+000 00 000 000</li><li>hello@boostpoint.example</li><li>Mon–Sat, 9:00–19:00</li></ul></div>
+  <div class="legal"><span>© 2026 Boost Point. Prototype: prices and products are sample data.</span><span>Prices exclude VAT</span></div>
+</div></footer>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <button class="close" data-close aria-label="Close">✕</button>
+  <div class="thumb" id="mThumb"></div>
+  <div class="detail">
+    <div><span class="eyebrow" id="mCat"></span><h2 id="mTitle" style="margin-top:6px"></h2></div>
+    <p class="desc" id="mDesc"></p>
+    <div class="opt" id="mSizeWrap"><span>Size</span><div class="seg" id="mSize"></div></div>
+    <div class="opt" id="mMatWrap"><span>Material / finish</span><div class="seg" id="mMat"></div></div>
+    <div class="opt"><span>Quantity</span><div class="seg qty-row" id="mQty"></div></div>
+    <div class="upload">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <span id="mFile">No artwork yet. You can also send it after ordering.</span>
+      <label for="mFileIn">Upload</label><input id="mFileIn" type="file" accept=".pdf,.ai,.psd,.png,.jpg,.jpeg,.svg">
+    </div>
+    <div class="totals">
+      <div><div class="eyebrow">Total</div><div class="big" id="mTotal"></div><div class="unit" id="mUnit"></div></div>
+      <button class="btn btn-primary" id="mAdd">Add to cart</button>
+    </div>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Cart">
+  <header><h2 id="dTitle">Your cart</h2><button class="close" data-close aria-label="Close cart">✕</button></header>
+  <div class="items" id="dItems"></div>
+  <footer id="dFoot"></footer>
+</aside>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  // ---------- Icons (line art, inherits currentColor) ----------
+  const S = (d) => `<svg class="art" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICONS = {
+    banner: S('<path d="M6 14h52v26H6z"/><circle cx="9" cy="17" r="1.2"/><circle cx="55" cy="17" r="1.2"/><circle cx="9" cy="37" r="1.2"/><circle cx="55" cy="37" r="1.2"/><path d="M16 24h22M16 30h32"/><path d="M14 40v14M50 40v14"/>'),
+    rollup: S('<rect x="20" y="6" width="24" height="46" rx="1"/><path d="M26 16h12M26 22h8"/><rect x="16" y="52" width="32" height="5" rx="2"/><path d="M32 57v3"/>'),
+    flag: S('<path d="M18 6v54"/><path d="M18 8c14 0 26 8 30 22-10 4-20 8-30 10"/><path d="M12 60h12"/>'),
+    poster: S('<rect x="14" y="6" width="36" height="52" rx="1"/><circle cx="32" cy="24" r="8"/><path d="M20 42h24M20 48h16"/>'),
+    sticker: S('<path d="M10 10h44v28L38 54H10z"/><path d="M38 54V40a2 2 0 0 1 2-2h14"/><circle cx="26" cy="26" r="7"/>'),
+    labels: S('<circle cx="20" cy="32" r="12"/><circle cx="20" cy="32" r="4"/><path d="M20 20h30v24H20"/><path d="M28 26h8M28 38h8M40 26h6M40 38h6"/>'),
+    decal: S('<rect x="6" y="10" width="52" height="38" rx="2"/><path d="M6 40l14-12 10 8 10-10 18 14"/><circle cx="44" cy="20" r="4"/><path d="M14 56h36"/>'),
+    car: S('<path d="M6 40v-8l6-12h28l10 12h8v8z"/><circle cx="18" cy="42" r="5"/><circle cx="46" cy="42" r="5"/><path d="M14 28h32"/>'),
+    card: S('<rect x="6" y="16" width="40" height="26" rx="2"/><path d="M12 24h14M12 30h10"/><rect x="18" y="24" width="40" height="26" rx="2" fill="var(--sheet)"/><path d="M24 34h18M24 40h12"/>'),
+    flyer: S('<path d="M14 6h28l8 8v44H14z"/><path d="M42 6v8h8"/><path d="M20 22h24M20 28h24M20 34h16"/><rect x="20" y="40" width="24" height="10"/>'),
+    brochure: S('<path d="M6 14l17-4v44l-17 4zM23 10l18 4v44l-18-4zM41 14l17-4v44l-17 4z"/>'),
+    notebook: S('<rect x="16" y="6" width="36" height="52" rx="2"/><path d="M10 14h10M10 24h10M10 34h10M10 44h10"/><path d="M26 18h18"/>'),
+    calendar: S('<rect x="8" y="12" width="48" height="44" rx="2"/><path d="M8 24h48M20 6v10M44 6v10"/><path d="M16 32h4M28 32h4M40 32h4M16 42h4M28 42h4M40 42h4"/>'),
+    mug: S('<path d="M12 16h32v30a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8z"/><path d="M44 22h4a6 6 0 0 1 0 12h-4"/><path d="M20 8c0 3 3 3 3 6M30 8c0 3 3 3 3 6"/>'),
+    bottle: S('<path d="M26 6h12v8l4 6v36a2 2 0 0 1-2 2H24a2 2 0 0 1-2-2V20l4-6z"/><path d="M22 30h20v14H22"/>'),
+    shirt: S('<path d="M22 8l-14 8 6 12 6-3v31h24V25l6 3 6-12-14-8c-2 4-6 6-10 6s-8-2-10-6z"/>'),
+    cap: S('<path d="M10 40a22 22 0 0 1 44 0z"/><path d="M10 40h48l-4 6H14"/><path d="M32 18v4"/>'),
+    bag: S('<path d="M12 22h40l-4 36H16z"/><path d="M24 22v-6a8 8 0 0 1 16 0v6"/>'),
+    pen: S('<path d="M44 8l12 12-30 30-14 2 2-14z"/><path d="M38 14l12 12"/>'),
+    key: S('<circle cx="22" cy="22" r="12"/><circle cx="22" cy="22" r="4"/><path d="M30 30l22 22M44 44l6-6M50 50l4-4"/>'),
+    usb: S('<rect x="20" y="22" width="24" height="36" rx="3"/><path d="M24 22V8h16v14M28 13h2M34 13h2"/>'),
+    mousepad: S('<rect x="6" y="14" width="52" height="38" rx="5"/><path d="M38 24a7 7 0 0 1 7 7v6a7 7 0 0 1-14 0v-6a7 7 0 0 1 7-7zM38 24v8"/>'),
+    lanyard: S('<path d="M16 6l16 30L48 6"/><rect x="22" y="36" width="20" height="22" rx="2"/><path d="M28 44h8M28 50h6"/>'),
+    umbrella: S('<path d="M6 30a26 22 0 0 1 52 0c-4-3-8-3-13 0-4-3-9-3-13 0-4-3-9-3-13 0-5-3-9-3-13 0z"/><path d="M32 30v20a5 5 0 0 1-10 0"/><path d="M32 8V4"/>'),
+    power: S('<rect x="18" y="6" width="28" height="52" rx="5"/><path d="M34 20l-6 12h8l-6 12"/>'),
+    acrylic: S('<path d="M10 12l38-4v44l-38 4z"/><path d="M48 8l6 4v40l-6 0"/><path d="M18 24l22-2M18 32l16-1"/><path d="M14 58h40"/>'),
+    sign: S('<rect x="8" y="10" width="48" height="30" rx="2"/><path d="M16 22h32M16 30h20"/><path d="M20 40v16M44 40v16"/>'),
+    letters: S('<path d="M8 50L18 14h4l10 36M12 38h16"/><path d="M38 14h10a8 8 0 0 1 0 16H38zM38 30h12a10 10 0 0 1 0 20H38z"/>'),
+    lightbox: S('<rect x="8" y="12" width="48" height="36" rx="3"/><rect x="14" y="18" width="36" height="24"/><path d="M32 4v4M18 6l2 4M46 6l-2 4"/><path d="M22 30h20"/>'),
+    aframe: S('<path d="M20 6h24l10 52M20 6L10 58M44 6l-4 52"/><path d="M18 18h24M16 28h24"/>'),
+    gift: S('<rect x="10" y="24" width="44" height="32" rx="2"/><path d="M6 16h52v8H6zM32 16v40"/><path d="M32 16c-4-8-14-8-12-2s12 2 12 2c4-8 14-8 12-2s-12 2-12 2"/>'),
+    plate: S('<rect x="6" y="20" width="52" height="24" rx="3"/><circle cx="12" cy="32" r="1.5"/><circle cx="52" cy="32" r="1.5"/><path d="M20 30h24M24 36h16"/>'),
+    backdrop: S('<path d="M6 10h52v38H6z"/><path d="M19 10v38M32 10v38M45 10v38"/><path d="M14 48v10M50 48v10"/>'),
+    canvas: S('<rect x="10" y="10" width="44" height="44"/><path d="M10 44l12-12 10 10 8-8 14 14"/><circle cx="40" cy="22" r="4"/>'),
+    folder: S('<path d="M8 14h48v40H8z"/><path d="M8 40l18-4 30 4"/><path d="M16 22h16"/>'),
+    envelope: S('<rect x="6" y="14" width="52" height="36" rx="2"/><path d="M6 16l26 18 26-18"/>'),
+  };
+
+  // ---------- Categories ----------
+  const CATS = [
+    { id: 'large', name: 'Large Format', blurb: 'Banners, roll-ups, flags', tint: 'var(--tint-c)', ink: 'var(--c)', icon: 'rollup' },
+    { id: 'stickers', name: 'Stickers & Labels', blurb: 'Die-cut, rolls, decals', tint: 'var(--tint-m)', ink: 'var(--m)', icon: 'sticker' },
+    { id: 'print', name: 'Print & Stationery', blurb: 'Cards, flyers, brochures', tint: 'var(--tint-y)', ink: '#b38f00', icon: 'flyer' },
+    { id: 'promo', name: 'Promo Products', blurb: 'Mugs, shirts, gifts', tint: 'var(--tint-k)', ink: 'var(--k)', icon: 'mug' },
+    { id: 'signage', name: 'Signage & UV Print', blurb: 'Acrylic, 3D letters, lightboxes', tint: 'var(--tint-v)', ink: '#6a4fd6', icon: 'letters' },
+  ];
+  const catById = Object.fromEntries(CATS.map(c => [c.id, c]));
+
+  // ---------- Default option sets per category ----------
+  const QTY = {
+    one:   [1, 2, 5, 10, 25],
+    small: [10, 25, 50, 100, 250],
+    bulk:  [50, 100, 250, 500, 1000],
+    print: [100, 250, 500, 1000, 2500],
+  };
+  // Volume discount: each step up the ladder knocks a bit off the unit price
+  const DISC = [1, .92, .84, .74, .62];
+
+  const sz = (...a) => a.map(([label, mult]) => ({ label, mult }));
+  const mt = (...a) => a.map(([label, mult]) => ({ label, mult }));
+
+  // ---------- Products (sample data) ----------
+  // price = unit price in USD for the first size/material at the first quantity tier
+  const P = [
+    // Large format
+    ['Vinyl Banner', 'large', 'banner', 18, 'one', 'Weatherproof PVC banner with hemmed edges and metal eyelets every 50 cm. Indoor and outdoor.', sz(['100×50 cm',1],['200×100 cm',2.8],['300×100 cm',4],['500×100 cm',6.2]), mt(['440 gsm frontlit',1],['510 gsm heavy duty',1.25]), 'hot'],
+    ['Mesh Banner', 'large', 'banner', 24, 'one', 'Perforated mesh lets wind through. Built for fences, scaffolding and building wraps.', sz(['200×100 cm',1],['300×150 cm',2.1],['500×200 cm',4.5]), mt(['370 gsm mesh',1])],
+    ['Roll-up Banner', 'large', 'rollup', 55, 'one', 'Retractable stand with printed graphic and carry bag. Sets up in under a minute.', sz(['85×200 cm',1],['100×200 cm',1.2],['120×200 cm',1.45]), mt(['Economy stand',1],['Premium stand',1.5],['Double-sided',2.1]), 'hot'],
+    ['X-Banner Stand', 'large', 'rollup', 32, 'one', 'Lightweight fibreglass X-frame with printed banner. A low-cost option for events.', sz(['60×160 cm',1],['80×180 cm',1.25]), mt(['PVC print',1],['PP anti-curl',1.2])],
+    ['Pop-up Backdrop Wall', 'large', 'backdrop', 420, 'one', 'Magnetic pop-up frame with full-colour fabric graphic. Media walls, booths, step-and-repeat.', sz(['3×3 panels',1],['4×3 panels',1.3]), mt(['Tension fabric',1],['Fabric + LED',1.6])],
+    ['Feather Flag', 'large', 'flag', 68, 'one', 'Tall curved flag on a flexible pole. Base options for grass, concrete or indoor floors.', sz(['Small 2.5 m',1],['Medium 3.5 m',1.3],['Large 4.5 m',1.6]), mt(['Cross base',1],['Ground spike',.9],['Water base',1.25])],
+    ['Teardrop Flag', 'large', 'flag', 72, 'one', 'Teardrop-shaped flag that stays readable without wind.', sz(['2.2 m',1],['3.0 m',1.3],['4.0 m',1.6]), mt(['Cross base',1],['Ground spike',.9])],
+    ['Table Flag', 'large', 'flag', 9, 'small', 'Small desk flag with chrome pole and base. For receptions, meeting rooms and events.', sz(['15×22 cm',1]), mt(['Single flag',1],['Double flag',1.6])],
+    ['Poster', 'large', 'poster', 3.5, 'small', 'Full-colour posters on photo or silk paper.', sz(['A3',1],['A2',1.8],['A1',3],['A0',5]), mt(['170 gsm silk',1],['200 gsm photo satin',1.4])],
+    ['Canvas Print', 'large', 'canvas', 38, 'one', 'Gallery-wrapped canvas on a pine frame, ready to hang. Good for offices and showrooms.', sz(['30×40 cm',1],['50×70 cm',1.7],['80×120 cm',3.1]), mt(['Matte canvas',1],['Glossy canvas',1.1])],
+    ['Billboard Print', 'large', 'banner', 260, 'one', 'Paper or vinyl billboard skins, printed in panels for street hoardings.', sz(['4×3 m',1],['6×3 m',1.45],['12×4 m',3.6]), mt(['Blueback paper',1],['Frontlit vinyl',1.6])],
+
+    // Stickers & labels
+    ['Die-cut Stickers', 'stickers', 'sticker', .55, 'bulk', 'Cut to the outline of your design. Durable vinyl with a matte or gloss laminate.', sz(['5×5 cm',1],['7.5×7.5 cm',1.4],['10×10 cm',1.9]), mt(['White vinyl gloss',1],['White vinyl matte',1],['Clear vinyl',1.15])],
+    ['Sticker Sheets', 'stickers', 'sticker', 1.8, 'small', 'Several kiss-cut stickers on one sheet. Popular for packaging and giveaways.', sz(['A6',1],['A5',1.6],['A4',2.6]), mt(['Gloss paper',1],['Vinyl',1.4])],
+    ['Roll Labels', 'stickers', 'labels', .09, 'print', 'Product labels on rolls for hand or machine application. Food-safe options available.', sz(['40 mm round',1],['50×30 mm',1.1],['100×70 mm',2]), mt(['Gloss paper',1],['White PP',1.3],['Kraft',1.2])],
+    ['Window Decals', 'stickers', 'decal', 22, 'one', 'Static cling or adhesive window graphics. Opening hours, offers and branding.', sz(['30×30 cm',1],['60×60 cm',2.6],['100×100 cm',5.4]), mt(['Adhesive vinyl',1],['Static cling',1.2],['Frosted',1.4])],
+    ['One-way Vision Film', 'stickers', 'decal', 28, 'one', 'Shows full colour from outside and stays see-through from inside. For shop windows and vehicle rear glass.', sz(['1 m²',1],['3 m²',2.8],['5 m²',4.5]), mt(['Perforated 50/50',1])],
+    ['Floor Graphics', 'stickers', 'decal', 26, 'one', 'Anti-slip laminated floor stickers for wayfinding, queues and promotions.', sz(['40 cm round',1],['60×60 cm',1.6],['100×50 cm',2]), mt(['R10 anti-slip',1])],
+    ['Vehicle Magnets', 'stickers', 'car', 34, 'one', 'Removable magnetic signs for car doors. Leave no residue.', sz(['30×20 cm',1],['50×30 cm',1.6],['60×40 cm',2.1]), mt(['0.85 mm magnet',1])],
+    ['Car Wrap (partial)', 'stickers', 'car', 380, 'one', 'Cast-vinyl partial wrap, designed to your vehicle and fitted by our team.', sz(['Small car',1],['SUV',1.35],['Van',1.8]), mt(['Gloss cast vinyl',1],['Matte cast vinyl',1.05])],
+    ['Holographic Stickers', 'stickers', 'sticker', .85, 'bulk', 'Rainbow holographic finish. Works well for packaging and anti-counterfeit seals.', sz(['5×5 cm',1],['7.5×7.5 cm',1.4]), mt(['Holographic',1])],
+
+    // Print & stationery
+    ['Business Cards', 'print', 'card', .09, 'print', 'Full-colour, double-sided business cards on thick premium board.', sz(['85×55 mm',1],['90×50 mm',1]), mt(['350 gsm matte',1],['400 gsm soft-touch',1.6],['Spot UV',2.1]), 'hot'],
+    ['Flyers', 'print', 'flyer', .12, 'print', 'Single or double-sided flyers for promotions, menus and handouts.', sz(['A6',1],['A5',1.5],['A4',2.4]), mt(['130 gsm gloss',1],['170 gsm silk',1.25])],
+    ['Tri-fold Brochures', 'print', 'brochure', .38, 'print', 'Folded to DL size. A good fit for services, price lists and menus.', sz(['A4 → DL',1]), mt(['150 gsm gloss',1],['170 gsm silk',1.15])],
+    ['Letterheads', 'print', 'flyer', .14, 'print', 'Branded A4 letterheads that work in office laser printers.', sz(['A4',1]), mt(['100 gsm offset',1],['120 gsm premium',1.3])],
+    ['Envelopes', 'print', 'envelope', .22, 'print', 'Printed envelopes with your logo and return address.', sz(['DL',1],['C5',1.2],['C4',1.6]), mt(['Self-seal',1],['Window',1.1])],
+    ['Presentation Folders', 'print', 'folder', 1.6, 'bulk', 'A4 folders with pockets and a business card slot.', sz(['A4',1]), mt(['350 gsm matte',1],['350 gsm + spot UV',1.4])],
+    ['Notebooks', 'print', 'notebook', 4.5, 'small', 'Custom cover notebooks with ruled or blank pages.', sz(['A6',1],['A5',1.4]), mt(['Wire-o',1],['Perfect bound',1.1],['Hardcover',1.8])],
+    ['Wall & Desk Calendars', 'print', 'calendar', 5.2, 'small', 'Twelve months of your brand on a wall or a desk.', sz(['Desk',1],['Wall A3',1.5]), mt(['Standard',1],['Premium gloss',1.3])],
+    ['Menus', 'print', 'flyer', 1.4, 'small', 'Laminated, waterproof restaurant menus that you can wipe clean.', sz(['A4',1],['A3 folded',1.7]), mt(['Laminated 350 gsm',1],['PVC',1.5])],
+    ['Certificates', 'print', 'poster', 1.1, 'small', 'Premium certificates on textured board, with foil available.', sz(['A4',1]), mt(['300 gsm linen',1],['Gold foil',1.9])],
+
+    // Promo products
+    ['Ceramic Mug', 'promo', 'mug', 6.5, 'small', 'White 11 oz ceramic mug, sublimation printed. Dishwasher safe.', sz(['11 oz',1],['15 oz',1.2]), mt(['White',1],['Coloured inside',1.2],['Magic (heat change)',1.5]), 'hot'],
+    ['Travel Tumbler', 'promo', 'bottle', 11, 'small', 'Insulated stainless steel tumbler with lid. Laser engraved or UV printed.', sz(['350 ml',1],['500 ml',1.2]), mt(['Laser engraved',1],['Full colour UV',1.15])],
+    ['Water Bottle', 'promo', 'bottle', 7.5, 'small', 'Reusable aluminium or Tritan bottle with your logo.', sz(['500 ml',1],['750 ml',1.15]), mt(['Aluminium',1],['Tritan plastic',.85])],
+    ['T-shirts', 'promo', 'shirt', 7, 'small', '100% cotton tees, DTF or screen printed. Sizes S to XXL.', sz(['Front print',1],['Front + back',1.45]), mt(['160 gsm cotton',1],['190 gsm premium',1.3])],
+    ['Polo Shirts', 'promo', 'shirt', 12, 'small', 'Pique polos with embroidered or printed logo, for staff uniforms.', sz(['Chest logo',1],['Chest + back',1.4]), mt(['Printed',1],['Embroidered',1.3])],
+    ['Caps', 'promo', 'cap', 6, 'small', 'Six-panel caps with an embroidered front logo.', sz(['One size',1]), mt(['Cotton twill',1],['Trucker mesh',1.05])],
+    ['Tote Bags', 'promo', 'bag', 3.2, 'small', 'Reusable cotton or non-woven tote bags. Good for events and retail.', sz(['38×42 cm',1]), mt(['Non-woven',1],['140 gsm cotton',1.5],['Jute',2.2])],
+    ['Branded Pens', 'promo', 'pen', .6, 'bulk', 'Ballpoint pens with a pad-printed or laser engraved logo.', sz(['Standard',1]), mt(['Plastic',1],['Metal engraved',2.4])],
+    ['Keychains', 'promo', 'key', 1.4, 'bulk', 'Acrylic, metal or PVC keychains in custom shapes.', sz(['5 cm',1]), mt(['Acrylic UV',1],['Metal engraved',1.6],['Soft PVC',1.3])],
+    ['USB Flash Drives', 'promo', 'usb', 5.5, 'small', 'Branded USB drives with optional preloaded files.', sz(['16 GB',1],['32 GB',1.3],['64 GB',1.8]), mt(['Plastic',1],['Metal swivel',1.2])],
+    ['Mouse Pads', 'promo', 'mousepad', 3.8, 'small', 'Full-colour rubber-backed mouse pads.', sz(['22×18 cm',1],['80×30 cm desk mat',3.2]), mt(['Standard',1])],
+    ['Lanyards', 'promo', 'lanyard', 1.2, 'bulk', 'Printed polyester lanyards with a safety breakaway clip.', sz(['15 mm',1],['20 mm',1.15]), mt(['Polyester',1],['With badge holder',1.4])],
+    ['Umbrellas', 'promo', 'umbrella', 9, 'small', 'Windproof umbrellas printed on every panel.', sz(['Compact',1],['Golf 30"',1.4]), mt(['Standard',1])],
+    ['Power Banks', 'promo', 'power', 12, 'small', '10,000 mAh power banks with a printed or engraved logo.', sz(['10,000 mAh',1],['20,000 mAh',1.5]), mt(['UV print',1],['Laser engraved',1.05])],
+
+    // Signage & UV
+    ['UV Print on Acrylic', 'signage', 'acrylic', 45, 'one', 'Direct UV printing on clear or white acrylic, with standoffs included. Reception signs and wall art.', sz(['30×20 cm',1],['60×40 cm',2.6],['100×70 cm',5.8]), mt(['5 mm clear',1],['10 mm clear',1.5],['White back',1.1])],
+    ['Forex / PVC Board', 'signage', 'sign', 14, 'one', 'Lightweight rigid PVC signs for indoor displays and point of sale.', sz(['A3',1],['A2',1.7],['100×70 cm',3.6]), mt(['3 mm',1],['5 mm',1.3])],
+    ['Aluminium Composite Sign', 'signage', 'sign', 36, 'one', 'Dibond-type aluminium sign for outdoor and long-term use.', sz(['60×40 cm',1],['100×70 cm',2.5],['200×100 cm',6]), mt(['3 mm ACM',1],['4 mm ACM',1.2])],
+    ['3D Letters', 'signage', 'letters', 30, 'one', 'Raised acrylic, PVC or steel letters, with LED backlighting available. Priced per letter.', sz(['20 cm height',1],['40 cm height',2.2],['60 cm height',3.8]), mt(['Acrylic',1],['Stainless steel',2],['LED backlit',2.8])],
+    ['Light Box', 'signage', 'lightbox', 190, 'one', 'Slim LED light box with a printed backlit graphic that you can swap.', sz(['60×40 cm',1],['100×70 cm',1.9],['200×100 cm',3.8]), mt(['Single-sided',1],['Double-sided',1.6])],
+    ['A-frame Sidewalk Sign', 'signage', 'aframe', 85, 'one', 'Double-sided pavement sign with replaceable posters.', sz(['A1',1],['A0',1.4]), mt(['Aluminium frame',1])],
+    ['UV Printed Gifts', 'signage', 'gift', 9, 'small', 'Full-colour UV printing on wood, glass, leather, metal and phone cases.', sz(['Small item',1],['Medium item',1.6]), mt(['Wood',1],['Glass',1.2],['Leather',1.4])],
+    ['Door & Name Plates', 'signage', 'plate', 16, 'one', 'Engraved or UV printed plates for offices, doors and desks.', sz(['20×7 cm',1],['30×10 cm',1.4]), mt(['Brushed aluminium',1],['Acrylic',.9],['Brass',1.8])],
+  ];
+
+  const PRODUCTS = P.map((p, i) => ({
+    id: 'p' + i, name: p[0], cat: p[1], icon: p[2], base: p[3], qty: QTY[p[4]],
+    desc: p[5], sizes: p[6], mats: p[7], hot: p[8] === 'hot', pop: (p[8] === 'hot' ? 100 : 0) + ((i * 37) % 50),
+  }));
+
+  // ---------- Helpers ----------
+  const $ = (s) => document.querySelector(s);
+  const money = (n) => { const d = n > 0 && n < 1 ? 3 : 2; return '$' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const unitPrice = (p, si, mi, qi) => p.base * p.sizes[si].mult * p.mats[mi].mult * DISC[qi];
+  const fromPrice = (p) => unitPrice(p, 0, 0, 0);
+  const thumbHTML = (p, crops = true) => {
+    const c = catById[p.cat];
+    return `${crops ? '<span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>' : ''}<span style="color:${c.ink};display:contents">${ICONS[p.icon]}</span>`;
+  };
+  const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 1800); };
+
+  // ---------- State ----------
+  const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  let cart = store.get('bp-cart', []);
+  let filter = 'all', query = '', sort = 'pop';
+
+  // ---------- Category tiles, chips, footer ----------
+  const counts = PRODUCTS.reduce((a, p) => (a[p.cat] = (a[p.cat] || 0) + 1, a), {});
+  $('#statCount').textContent = PRODUCTS.length;
+  $('#catGrid').innerHTML = CATS.map(c => `
+    <button class="cat-tile" data-cat="${c.id}">
+      <span class="ic" style="background:${c.tint};color:${c.ink}">${ICONS[c.icon].replace('class="art"', 'width="26" height="26"')}</span>
+      <b>${c.name}</b><span>${c.blurb} · ${counts[c.id]} items</span>
+    </button>`).join('');
+  const renderChips = () => {
+    $('#chips').innerHTML = [`<button class="chip" data-cat="all" aria-pressed="${filter === 'all'}">All <span class="n">${PRODUCTS.length}</span></button>`]
+      .concat(CATS.map(c => `<button class="chip" data-cat="${c.id}" aria-pressed="${filter === c.id}"><span class="sw" style="background:${c.ink}"></span>${c.name} <span class="n">${counts[c.id]}</span></button>`)).join('');
+  };
+  $('#footCats').innerHTML = CATS.map(c => `<li>${c.name}</li>`).join('');
+
+  // ---------- Product grid ----------
+  const renderGrid = () => {
+    const q = query.trim().toLowerCase();
+    let list = PRODUCTS.filter(p => (filter === 'all' || p.cat === filter) &&
+      (!q || (p.name + ' ' + p.desc + ' ' + catById[p.cat].name).toLowerCase().includes(q)));
+    const by = { pop: (a, b) => b.pop - a.pop, low: (a, b) => fromPrice(a) - fromPrice(b), high: (a, b) => fromPrice(b) - fromPrice(a), az: (a, b) => a.name.localeCompare(b.name) };
+    list.sort(by[sort]);
+    $('#shopTitle').textContent = (filter === 'all' ? 'All products' : catById[filter].name) + (q ? ` matching “${query.trim()}”` : '');
+    $('#grid').innerHTML = list.length ? list.map(p => {
+      const c = catById[p.cat];
+      return `<button class="card" data-id="${p.id}">
+        <div class="thumb" style="background:${c.tint}">${thumbHTML(p)}${p.hot ? '<span class="badge">Bestseller</span>' : ''}</div>
+        <div class="body">
+          <h3>${esc(p.name)}</h3>
+          <span class="spec">${esc(p.sizes[0].label)} · ${esc(p.mats[0].label)}</span>
+          <div class="foot"><span class="price"><small>from</small>${money(fromPrice(p))}</span><span class="go">Customise →</span></div>
+        </div></button>`;
+    }).join('') : `<div class="empty" style="grid-column:1/-1">No products match “${esc(query)}”. Try “banner”, “mug” or “sticker”, or <a href="#quote">ask us for a custom quote</a>.</div>`;
+  };
+
+  // ---------- Product modal ----------
+  let cur = null, sel = { s: 0, m: 0, q: 0 }, fileName = '';
+  const seg = (el, items, key, label) => {
+    el.innerHTML = items.map((it, i) => `<button type="button" data-i="${i}" aria-pressed="${sel[key] === i}">${label(it, i)}</button>`).join('');
+  };
+  const renderModal = () => {
+    const p = cur;
+    seg($('#mSize'), p.sizes, 's', it => esc(it.label));
+    seg($('#mMat'), p.mats, 'm', it => esc(it.label));
+    seg($('#mQty'), p.qty, 'q', (n, i) => `${n.toLocaleString('en-US')} pcs<em>${money(unitPrice(p, sel.s, sel.m, i))}/pc</em>`);
+    $('#mSizeWrap').hidden = p.sizes.length < 2;
+    $('#mMatWrap').hidden = p.mats.length < 2;
+    const u = unitPrice(p, sel.s, sel.m, sel.q), n = p.qty[sel.q];
+    $('#mTotal').textContent = money(u * n);
+    $('#mUnit').textContent = `${n.toLocaleString('en-US')} × ${money(u)}${sel.q ? ` · save ${Math.round((1 - DISC[sel.q]) * 100)}%` : ''}`;
+  };
+  const openModal = (id) => {
+    cur = PRODUCTS.find(p => p.id === id); sel = { s: 0, m: 0, q: 0 }; fileName = '';
+    const c = catById[cur.cat];
+    $('#mThumb').style.background = c.tint;
+    $('#mThumb').innerHTML = thumbHTML(cur);
+    $('#mCat').textContent = c.name;
+    $('#mTitle').textContent = cur.name;
+    $('#mDesc').textContent = cur.desc;
+    $('#mFile').textContent = 'No artwork yet. You can also send it after ordering.';
+    $('#mFileIn').value = '';
+    renderModal();
+    $('#modal').classList.add('on'); $('#scrim').classList.add('on');
+    setTimeout(() => $('#modal .close').focus(), 50);
+  };
+  const closeAll = () => { ['#modal', '#drawer', '#scrim'].forEach(s => $(s).classList.remove('on')); };
+
+  [['#mSize', 's'], ['#mMat', 'm'], ['#mQty', 'q']].forEach(([s, k]) => {
+    $(s).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; sel[k] = +b.dataset.i; renderModal(); });
+  });
+  $('#mFileIn').addEventListener('change', e => { const f = e.target.files[0]; if (f) { fileName = f.name; $('#mFile').textContent = '✓ ' + f.name; } });
+  $('#mAdd').addEventListener('click', () => {
+    const p = cur, u = unitPrice(p, sel.s, sel.m, sel.q);
+    cart.push({ id: p.id, s: sel.s, m: sel.m, q: sel.q, unit: u, n: p.qty[sel.q], file: fileName });
+    saveCart(); closeAll(); toast(`Added ${p.name} to cart`);
+    const b = $('#cartBtn'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+  });
+
+  // ---------- Cart ----------
+  let stage = 'cart';
+  const saveCart = () => { store.set('bp-cart', cart); $('#cartCount').textContent = cart.length; renderCart(); };
+  const totals = () => {
+    const sub = cart.reduce((a, l) => a + l.unit * l.n, 0);
+    const ship = sub === 0 || sub >= 150 ? 0 : 9;
+    const vat = sub * 0.11;
+    return { sub, ship, vat, total: sub + ship + vat };
+  };
+  const renderCart = () => {
+    const items = $('#dItems'), foot = $('#dFoot');
+    if (stage === 'done') {
+      $('#dTitle').textContent = 'Order placed';
+      items.innerHTML = `<div class="success"><span class="tick"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg></span>
+        <h2 style="font-size:24px">Thank you!</h2><p style="color:var(--ink-2);margin:0">Order <span class="mono">BP-${Math.floor(10000 + Math.random() * 89999)}</span> is a demo, so nothing was charged or sent. On the live site, our team would email you a proof within a few hours.</p></div>`;
+      foot.innerHTML = `<button class="btn btn-primary btn-block" id="dAgain">Keep shopping</button>`;
+      return;
+    }
+    $('#dTitle').textContent = stage === 'checkout' ? 'Checkout' : 'Your cart';
+    if (!cart.length) {
+      items.innerHTML = `<div class="success"><span class="eyebrow">Cart is empty</span><p style="color:var(--ink-2);margin:0">Pick a product, choose size and quantity, and it will show up here.</p></div>`;
+      foot.innerHTML = `<button class="btn btn-ghost btn-block" data-close>Browse products</button>`;
+      return;
+    }
+    items.innerHTML = cart.map((l, i) => {
+      const p = PRODUCTS.find(x => x.id === l.id), c = catById[p.cat];
+      return `<div class="line"><span class="mini" style="background:${c.tint};color:${c.ink}">${ICONS[p.icon]}</span>
+        <div><b>${esc(p.name)}</b><div class="spec">${esc(p.sizes[l.s].label)} · ${esc(p.mats[l.m].label)}<br>${l.n.toLocaleString('en-US')} pcs × ${money(l.unit)}${l.file ? '<br>Artwork: ' + esc(l.file) : '<br>Artwork: send later'}</div>
+        <button class="rm" data-rm="${i}">Remove</button></div>
+        <span class="amt">${money(l.unit * l.n)}</span></div>`;
+    }).join('');
+    const t = totals();
+    const sums = `<div class="sum"><span>Subtotal</span><span>${money(t.sub)}</span></div>
+      <div class="sum"><span>Delivery${t.ship ? ' (free over $150)' : ''}</span><span>${t.ship ? money(t.ship) : 'Free'}</span></div>
+      <div class="sum"><span>VAT 11%</span><span>${money(t.vat)}</span></div>
+      <div class="sum total"><span>Total</span><span>${money(t.total)}</span></div>`;
+    foot.innerHTML = stage === 'checkout'
+      ? `<form class="checkout" id="coForm">
+          <input id="coName" required placeholder="Full name" autocomplete="name">
+          <div class="row2"><input id="coPhone" required placeholder="Phone" autocomplete="tel"><input id="coEmail" type="email" required placeholder="Email" autocomplete="email"></div>
+          <input id="coAddr" placeholder="Delivery address (leave empty for pickup)" autocomplete="street-address">
+          <select id="coPay"><option>Cash on delivery</option><option>Card payment</option><option>Bank transfer</option></select>
+          ${sums}
+          <button class="btn btn-primary btn-block" type="submit">Place order · ${money(t.total)}</button>
+          <button class="btn btn-ghost btn-block" type="button" id="coBack">Back to cart</button>
+        </form>`
+      : `${sums}<button class="btn btn-primary btn-block" id="dCheckout">Checkout</button>`;
+  };
+  const openCart = () => { stage = stage === 'done' ? 'cart' : stage; renderCart(); $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); };
+
+  // ---------- Events ----------
+  document.addEventListener('click', e => {
+    const t = e.target;
+    const card = t.closest('.card'); if (card) return openModal(card.dataset.id);
+    const cat = t.closest('[data-cat]');
+    if (cat) { filter = cat.dataset.cat; renderChips(); renderGrid(); if (cat.classList.contains('cat-tile')) $('#shop').scrollIntoView(); return; }
+    if (t.closest('[data-close]') || t.id === 'scrim') return closeAll();
+    const rm = t.closest('[data-rm]'); if (rm) { cart.splice(+rm.dataset.rm, 1); if (!cart.length) stage = 'cart'; return saveCart(); }
+    if (t.id === 'dCheckout') { stage = 'checkout'; return renderCart(); }
+    if (t.id === 'coBack') { stage = 'cart'; return renderCart(); }
+    if (t.id === 'dAgain') { stage = 'cart'; closeAll(); return renderCart(); }
+  });
+  document.addEventListener('submit', e => {
+    if (e.target.id === 'coForm') { e.preventDefault(); cart = []; stage = 'done'; store.set('bp-cart', cart); $('#cartCount').textContent = 0; renderCart(); }
+    if (e.target.id === 'quoteForm') { e.preventDefault(); $('#quoteDone').hidden = false; e.target.reset(); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+  $('#cartBtn').addEventListener('click', openCart);
+  $('#q').addEventListener('input', e => { query = e.target.value; renderGrid(); });
+  $('#q').addEventListener('keydown', e => { if (e.key === 'Enter') $('#shop').scrollIntoView(); });
+  $('#sort').addEventListener('change', e => { sort = e.target.value; renderGrid(); });
+
+  renderChips(); renderGrid(); saveCart();
+})();
+</script>
+</body>
+</html>
