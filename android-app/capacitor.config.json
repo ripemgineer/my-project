@@ -1,0 +1,9 @@
+{
+  "appId": "io.github.ripemgineer.macros",
+  "appName": "Macros",
+  "webDir": "www",
+  "backgroundColor": "#0f1115",
+  "android": {
+    "allowMixedContent": false
+  }
+}

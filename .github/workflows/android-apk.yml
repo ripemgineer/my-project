@@ -1,0 +1,84 @@
+name: Build Macros APK
+
+on:
+  push:
+    branches: [claude/wizardly-euler-yrfq09]
+    paths: ['macros/**', 'android-app/**', '.github/workflows/android-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: macros-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: android-app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install and sync web app into Android project
+        run: |
+          npm ci
+          npm run sync
+
+      - name: Prepare signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.MACROS_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.MACROS_KEYSTORE_PASSWORD }}
+        run: |
+          ks="$RUNNER_TEMP/macros.p12"
+          pw="${KEYSTORE_PASSWORD:-macros-tracker}"
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$ks"
+          else
+            echo "::warning::MACROS_KEYSTORE_BASE64 secret not set. Using a one-off key, so this APK cannot update an earlier install (uninstall first). See android-app/README.md."
+            keytool -genkeypair -keystore "$ks" -storetype PKCS12 -storepass "$pw" -keypass "$pw" \
+              -alias macros -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Macros"
+          fi
+          echo "MACROS_KEYSTORE=$ks" >> "$GITHUB_ENV"
+          echo "MACROS_KEYSTORE_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        working-directory: android-app/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Macros.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Macros-apk
+          path: ${{ runner.temp }}/Macros.apk
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="macros-apk-${{ github.run_number }}"
+          gh release create "$tag" "$RUNNER_TEMP/Macros.apk" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "Macros APK (build ${{ github.run_number }})" \
+            --notes "Download **Macros.apk** below on your Android phone and open it to install." \
+            --latest

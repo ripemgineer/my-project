@@ -603,7 +603,7 @@ function loadScript(src) {
   });
 }
 async function zxingScan(session, video, onCode) {
-  if (!window.ZXingBrowser) await loadScript('https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js');
+  if (!window.ZXingBrowser) await loadScript('vendor/zxing-browser.min.js');
   if (session !== scan || session.done) return;
   const reader = new ZXingBrowser.BrowserMultiFormatReader();
   $('#scanMsg').textContent = 'Point the camera at a barcode';
@@ -741,11 +741,24 @@ $('#calcForm').addEventListener('submit', e => {
   toast('Targets updated');
 });
 $('#unitSel').addEventListener('change', e => { S.unit = e.target.value; save(); renderSettings(); });
-$('#exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' });
+const native = () => !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+$('#exportBtn').addEventListener('click', async () => {
+  const name = `macros-backup-${ymd(new Date())}.json`;
+  const json = JSON.stringify(S, null, 1);
+  if (native()) {
+    // Android app: downloads don't work in the WebView, so save to a file and open the share sheet
+    try {
+      const { Filesystem, Share } = Capacitor.Plugins;
+      const { uri } = await Filesystem.writeFile({ path: name, data: json, directory: 'CACHE', encoding: 'utf8' });
+      await Share.share({ title: 'Macros backup', files: [uri] });
+    } catch (e) {
+      if (!/cancel/i.test(String(e && e.message))) toast('Export failed');
+    }
+    return;
+  }
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `macros-backup-${ymd(new Date())}.json`;
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 });
@@ -775,6 +788,6 @@ document.addEventListener('visibilitychange', () => {
   if (now !== bootDay) { if (day === bootDay) day = now; bootDay = now; render(); }
 });
 render();
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !native()) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }

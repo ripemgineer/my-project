@@ -18,6 +18,9 @@ A simple, free macro tracker inspired by MacroFactor. It runs in the browser and
 
 The camera needs https, so open it from the hosted URL, not as a local file.
 
+## Android APK
+See [`../android-app/README.md`](../android-app/README.md). The newest APK is always at https://github.com/ripemgineer/my-project/releases/latest/download/Macros.apk
+
 ## Hosting (GitHub Pages, free)
 Repo **Settings → Pages → Build and deployment → Source: Deploy from a branch**, then pick the branch this folder lives on with folder `/ (root)`.
 The app will then be at `https://<user>.github.io/<repo>/macros/`.
