@@ -297,28 +297,72 @@ $('#searchForm').addEventListener('submit', async e => {
 
 /* ---------- Open Food Facts ---------- */
 const OFF = 'https://world.openfoodfacts.org';
-const OFF_FIELDS = 'code,product_name,product_name_en,generic_name,brands,nutriments,serving_size,serving_quantity,image_front_small_url';
+const OFF_FIELDS = 'code,product_name,product_name_en,product_name_ar,product_name_fr,abbreviated_product_name,generic_name,generic_name_en,brands,nutriments,nutrition_data_per,serving_size,serving_quantity,product_quantity,image_front_small_url';
+const offName = p => ['product_name_en', 'product_name', 'abbreviated_product_name', 'product_name_ar', 'product_name_fr', 'generic_name_en', 'generic_name']
+  .map(k => (p[k] || '').trim()).find(Boolean) || '';
+// Reads macros from an Open Food Facts nutriments object for one basis suffix ('_100g', '_serving', ...).
+function readNutriments(n, sfx) {
+  const v = k => (n[k + sfx] != null && n[k + sfx] !== '' ? num(n[k + sfx]) : null);
+  let kcal = v('energy-kcal');
+  if (kcal == null && v('energy-kj') != null) kcal = v('energy-kj') / 4.184;
+  if (kcal == null && v('energy') != null) kcal = v('energy') / 4.184; // 'energy' is kJ
+  const m = { kcal, p: v('proteins'), c: v('carbohydrates'), f: v('fat') };
+  if (Object.values(m).every(x => x == null)) return null;
+  for (const k of ['p', 'c', 'f']) m[k] = m[k] || 0;
+  if (!m.kcal) m.kcal = m.p * 4 + m.c * 4 + m.f * 9;
+  return m.kcal || m.p || m.c || m.f ? m : null;
+}
 function offToFood(p) {
   const n = p.nutriments || {};
-  let kcal = n['energy-kcal_100g'];
-  if (kcal == null && n.energy_100g != null) kcal = n.energy_100g / 4.184; // kJ -> kcal
-  const per100 = { kcal: num(kcal), p: num(n.proteins_100g), c: num(n.carbohydrates_100g), f: num(n.fat_100g) };
-  const hasData = kcal != null || n.proteins_100g != null || n.carbohydrates_100g != null || n.fat_100g != null;
-  if (!hasData) return null;
-  if (!per100.kcal) per100.kcal = per100.p * 4 + per100.c * 4 + per100.f * 9;
   const sq = num(p.serving_quantity);
-  const name = (p.product_name_en || p.product_name || p.generic_name || '').trim() || 'Unnamed product';
-  return {
+  const food = {
     key: 'b:' + p.code,
     code: p.code,
-    name,
+    name: offName(p) || 'Unnamed product',
     brand: (p.brands || '').split(',')[0].trim(),
     img: p.image_front_small_url || '',
-    per100,
     servingG: sq > 0 ? sq : null,
     servingLabel: sq > 0 ? (p.serving_size || `${sq} g`) : '',
   };
+  // Prefer per-100g values, then "as prepared", then per-serving values
+  let per100 = readNutriments(n, '_100g') || readNutriments(n, '_prepared_100g');
+  if (!per100) {
+    const ps = readNutriments(n, '_serving') || readNutriments(n, '_prepared_serving');
+    if (ps && sq > 0) per100 = Object.fromEntries(Object.entries(ps).map(([k, x]) => [k, (x * 100) / sq]));
+    else if (ps) return { ...food, per100: ps, servingG: 100, servingOnly: true, servingLabel: p.serving_size || 'serving' };
+  }
+  if (!per100) {
+    // last resort: bare values, which follow the label's basis
+    const bare = readNutriments(n, '');
+    if (bare && p.nutrition_data_per !== 'serving') per100 = bare;
+  }
+  return per100 ? { ...food, per100 } : null;
 }
+
+/* ---------- USDA FoodData Central (fallback, mostly US products) ---------- */
+const FDC = 'https://api.nal.usda.gov/fdc/v1/foods/search';
+async function getUSDA(code) {
+  const strip = c => c.replace(/^0+/, '');
+  const j = await fetchJSON(`${FDC}?api_key=DEMO_KEY&dataType=Branded&pageSize=10&query=${encodeURIComponent(strip(code))}`);
+  const f = ((j && j.foods) || []).find(x => x.gtinUpc && strip(x.gtinUpc) === strip(code));
+  if (!f) return null;
+  const val = (...nums) => {
+    const x = (f.foodNutrients || []).find(n => nums.includes(String(n.nutrientNumber)));
+    return x ? num(x.value) : null;
+  };
+  const kcal = val('208') ?? (val('268') != null ? val('268') / 4.184 : null);
+  const per100 = { kcal: num(kcal), p: num(val('203')), c: num(val('205')), f: num(val('204')) };
+  if (!per100.kcal && !per100.p && !per100.c && !per100.f) return null;
+  if (!per100.kcal) per100.kcal = per100.p * 4 + per100.c * 4 + per100.f * 9;
+  const sg = /^(g|ml|grm|mlt)$/i.test(f.servingSizeUnit || '') ? num(f.servingSize) : 0;
+  const title = s => String(s || '').toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
+  return {
+    key: 'b:' + code, code, name: title(f.description) || 'Unnamed product', brand: title(f.brandName || f.brandOwner || ''),
+    img: '', per100, servingG: sg > 0 ? sg : null,
+    servingLabel: sg > 0 ? (f.householdServingFullText ? `${f.householdServingFullText} (${r0(sg)} g)` : `${r0(sg)} g`) : '',
+  };
+}
+
 async function fetchJSON(url, ms = 12000) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -334,7 +378,7 @@ async function getProduct(code) {
   if (!j || j.status !== 1 || !j.product) return { found: false };
   j.product.code = j.product.code || code;
   const food = offToFood(j.product);
-  return food ? { found: true, food } : { found: true, food: null, name: j.product.product_name };
+  return food ? { found: true, food } : { found: true, food: null, name: offName(j.product), brand: (j.product.brands || '').split(',')[0].trim() };
 }
 async function searchOFF(q) {
   const url = `${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=30&fields=${OFF_FIELDS}`;
@@ -356,17 +400,48 @@ async function lookupBarcode(code, fromScanner) {
     res = await getProduct(code);
     if (!res.found && code.length === 12) res = await getProduct('0' + code); // UPC-A -> EAN-13
   } catch (e) {
+    res = { found: false, failed: true };
+  }
+  if (res.food) return foundFood(res.food, fromScanner);
+  // second source
+  try {
+    const usda = await getUSDA(code);
+    if (usda) return foundFood(usda, fromScanner);
+  } catch (e) { /* ignore */ }
+  if (res.failed) {
     toast('Lookup failed — check your connection');
     if (fromScanner) closeTop(); else renderFoodList();
     return;
   }
-  if (res.food) return foundFood(res.food, fromScanner);
-  toast(res.found ? 'Product found, but it has no nutrition data. Add it once and it will be remembered.'
-    : 'Not in the database yet. Add it once and it will be remembered.');
-  const pre = { code, name: res.name || '' };
+  const pre = { code, name: res.name || '', brand: res.brand || '', missing: res.found ? 'nodata' : 'notfound' };
   if (fromScanner) { fillEdit(null, pre); replaceTop('editSheet'); }
   else { renderFoodList(); openEdit(null, pre); }
+  if (res.name) findSimilar(code, [res.name, res.brand].filter(Boolean).join(' '));
 }
+// When a scanned product has no nutrition data, offer similar products that do.
+let similar = [];
+async function findSimilar(code, q) {
+  const box = $('#efSimilar');
+  box.hidden = false;
+  $('#efSimilarList').innerHTML = '<li class="empty">Looking for similar products…</li>';
+  try {
+    similar = (await searchOFF(q)).filter(f => f.code !== code).slice(0, 8);
+  } catch (e) { similar = []; }
+  if (!ef || ef.food || $('#efCode').value !== code) return; // sheet moved on
+  if (!similar.length) { box.hidden = true; return; }
+  $('#efSimilarList').innerHTML = similar.map(foodRow).join('');
+}
+$('#efSimilarList').addEventListener('click', e => {
+  const li = e.target.closest('li[data-i]');
+  if (!li) return;
+  const pick = similar[+li.dataset.i];
+  const code = $('#efCode').value.trim();
+  // remember the picked nutrition under the scanned barcode, so the next scan is instant
+  const food = { ...structuredClone(pick), key: code ? 'b:' + code : pick.key, code: code || pick.code, custom: true };
+  S.foods[food.key] = { ...(S.foods[food.key] || {}), ...food };
+  save();
+  openFood(food, { meal: addMeal, replace: true });
+});
 function foundFood(food, fromScanner) {
   if (navigator.vibrate) navigator.vibrate(60);
   if (fromScanner) openFood(food, { meal: addMeal, replace: true });
@@ -456,9 +531,16 @@ function openEdit(food, pre, fromDetail) {
 function fillEdit(food, pre = {}, fromDetail = false) {
   ef = { food, fromDetail };
   pre = pre || {};
+  const notes = {
+    nodata: `This product is in the free database, but nobody has added its nutrition info yet. Copy the values from the label once and the app will remember them next time you scan it.`,
+    notfound: `This barcode isn't in the free databases yet. Copy the values from the label once and the app will remember them next time you scan it.`,
+  };
+  $('#efNote').hidden = !pre.missing;
+  $('#efNote').textContent = notes[pre.missing] || '';
+  $('#efSimilar').hidden = true;
   $('#efTitle').textContent = food ? 'Edit food' : 'Create food';
   $('#efName').value = food ? food.name : (pre.name || '');
-  $('#efBrand').value = food ? (food.brand || '') : '';
+  $('#efBrand').value = food ? (food.brand || '') : (pre.brand || '');
   $('#efCode').value = food ? (food.code || '') : (pre.code || '');
   const so = food && food.servingOnly;
   $('#efBasis').value = so ? 'serving' : '100';

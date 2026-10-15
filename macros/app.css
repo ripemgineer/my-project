@@ -227,3 +227,6 @@ main { padding: 0 16px; max-width: 640px; margin: 0 auto; }
   .summary { flex-direction: column; align-items: stretch; }
   .ring-wrap { margin: 0 auto; }
 }
+
+.note { background: color-mix(in srgb, var(--c) 16%, var(--card)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); border-radius: 12px; padding: 10px 12px; font-size: .88rem; }
+#efSimilar .list { max-height: 240px; overflow-y: auto; }
