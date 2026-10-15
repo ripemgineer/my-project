@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Macros</title>
+<meta name="description" content="Free macro tracker with barcode scanning">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <button class="icon-btn" id="prevDay" aria-label="Previous day">‹</button>
+  <button class="date-btn" id="dateLabel">Today</button>
+  <button class="icon-btn" id="nextDay" aria-label="Next day">›</button>
+  <input type="date" id="datePicker" class="hidden-input" aria-hidden="true" tabindex="-1">
+</header>
+
+<main>
+  <!-- TODAY -->
+  <section id="view-today" class="view active">
+    <div class="card summary">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" class="ring">
+          <circle cx="60" cy="60" r="52" class="ring-bg"/>
+          <circle cx="60" cy="60" r="52" class="ring-fg" id="kcalRing"/>
+        </svg>
+        <div class="ring-text">
+          <div class="big" id="kcalLeft">0</div>
+          <div class="muted small" id="kcalLeftLabel">kcal left</div>
+        </div>
+      </div>
+      <div class="macro-bars">
+        <div class="mbar" data-k="p"><div class="mbar-head"><span>Protein</span><span class="mv"></span></div><div class="track"><div class="fill p"></div></div></div>
+        <div class="mbar" data-k="c"><div class="mbar-head"><span>Carbs</span><span class="mv"></span></div><div class="track"><div class="fill c"></div></div></div>
+        <div class="mbar" data-k="f"><div class="mbar-head"><span>Fat</span><span class="mv"></span></div><div class="track"><div class="fill f"></div></div></div>
+        <div class="muted small" id="kcalLine"></div>
+      </div>
+    </div>
+    <div id="meals"></div>
+  </section>
+
+  <!-- WEIGHT -->
+  <section id="view-weight" class="view">
+    <div class="card">
+      <h2>Bodyweight</h2>
+      <form id="weightForm" class="row">
+        <input type="number" step="0.1" min="20" max="400" inputmode="decimal" id="weightInput" placeholder="Weight" required>
+        <span class="unit" id="weightUnit">kg</span>
+        <button class="btn primary" type="submit">Log</button>
+      </form>
+      <div class="muted small" id="weightHint">Logs for the selected day. Weigh in the morning for the cleanest trend.</div>
+    </div>
+    <div class="card">
+      <div class="row between"><h2>Trend</h2><span class="muted small" id="trendStat"></span></div>
+      <svg id="weightChart" viewBox="0 0 320 160" preserveAspectRatio="none"></svg>
+      <div class="legend small muted"><span><i class="dot raw"></i>Scale weight</span><span><i class="dot trend"></i>Trend (smoothed)</span></div>
+    </div>
+    <div class="card">
+      <h2>History</h2>
+      <ul id="weightList" class="list"></ul>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="view-settings" class="view">
+    <div class="card">
+      <h2>Daily targets</h2>
+      <form id="goalForm" class="grid2">
+        <label>Calories<input type="number" id="gKcal" inputmode="numeric" min="0"></label>
+        <label>Protein (g)<input type="number" id="gP" inputmode="numeric" min="0"></label>
+        <label>Carbs (g)<input type="number" id="gC" inputmode="numeric" min="0"></label>
+        <label>Fat (g)<input type="number" id="gF" inputmode="numeric" min="0"></label>
+        <button class="btn primary span2" type="submit">Save targets</button>
+      </form>
+      <div class="muted small" id="goalCheck"></div>
+    </div>
+    <div class="card">
+      <h2>Target calculator</h2>
+      <form id="calcForm" class="grid2">
+        <label>Sex<select id="cSex"><option value="m">Male</option><option value="f">Female</option></select></label>
+        <label>Age<input type="number" id="cAge" inputmode="numeric" min="13" max="100" required></label>
+        <label>Height (cm)<input type="number" id="cHeight" inputmode="decimal" min="100" max="250" required></label>
+        <label>Weight (<span class="wu">kg</span>)<input type="number" id="cWeight" inputmode="decimal" step="0.1" required></label>
+        <label class="span2">Activity
+          <select id="cAct">
+            <option value="1.2">Sedentary (desk job, little exercise)</option>
+            <option value="1.375">Light (1–3 workouts/week)</option>
+            <option value="1.55" selected>Moderate (3–5 workouts/week)</option>
+            <option value="1.725">High (6–7 workouts/week)</option>
+            <option value="1.9">Very high (physical job + training)</option>
+          </select>
+        </label>
+        <label class="span2">Goal
+          <select id="cGoal">
+            <option value="cut">Lose fat (≈0.5 kg/week)</option>
+            <option value="slowcut">Lose fat slowly (≈0.25 kg/week)</option>
+            <option value="maintain">Maintain</option>
+            <option value="leanbulk" selected>Lean bulk (≈0.25 kg/week)</option>
+            <option value="bulk">Bulk (≈0.5 kg/week)</option>
+          </select>
+        </label>
+        <button class="btn span2" type="submit">Calculate &amp; apply</button>
+      </form>
+      <div class="muted small" id="calcOut"></div>
+    </div>
+    <div class="card">
+      <h2>Preferences</h2>
+      <label class="row between">Weight unit
+        <select id="unitSel"><option value="kg">kg</option><option value="lb">lb</option></select>
+      </label>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="muted small">Everything is stored only on this phone. Export a backup now and then so you don't lose your history.</p>
+      <div class="row wrap">
+        <button class="btn" id="exportBtn">Export backup</button>
+        <label class="btn">Import backup<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+        <button class="btn danger" id="resetBtn">Erase all data</button>
+      </div>
+    </div>
+    <p class="muted small center">Food data from <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (free, community-made). Always double-check labels.</p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button class="tab active" data-view="today"><span class="ti">◎</span>Today</button>
+  <button class="tab add" id="addBtn" aria-label="Add food"><span>+</span></button>
+  <button class="tab" data-view="weight"><span class="ti">⚖</span>Weight</button>
+  <button class="tab" data-view="settings"><span class="ti">⚙</span>Settings</button>
+</nav>
+
+<!-- ADD FOOD SHEET -->
+<div class="sheet" id="addSheet" hidden>
+  <div class="sheet-body">
+    <div class="sheet-head">
+      <h2>Add to <select id="addMeal"></select></h2>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <button class="btn primary block scan-btn" id="scanBtn">▮▯▮▮▯▮ Scan barcode</button>
+    <form id="searchForm" class="row">
+      <input type="search" id="searchInput" placeholder="Search foods or type a barcode" enterkeyhint="search">
+      <button class="btn" type="submit">Search</button>
+    </form>
+    <div class="seg" id="addTabs">
+      <button class="active" data-t="recent">Recent</button>
+      <button data-t="mine">My foods</button>
+      <button data-t="results">Results</button>
+    </div>
+    <ul class="list foods" id="foodList"></ul>
+    <div class="row wrap">
+      <button class="btn block" id="quickAddBtn">Quick add calories/macros</button>
+      <button class="btn block" id="createFoodBtn">Create a food</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD DETAIL SHEET -->
+<div class="sheet" id="foodSheet" hidden>
+  <div class="sheet-body">
+    <div class="sheet-head">
+      <div>
+        <h2 id="fdName"></h2>
+        <div class="muted small" id="fdBrand"></div>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="row amount">
+      <input type="number" id="fdQty" inputmode="decimal" step="any" min="0">
+      <select id="fdUnit"></select>
+      <select id="fdMeal"></select>
+    </div>
+    <div class="macro-chips" id="fdMacros"></div>
+    <div class="muted small" id="fdPer"></div>
+    <div class="row">
+      <button class="btn danger" id="fdDelete" hidden>Delete</button>
+      <button class="btn" id="fdEditFood">Edit food</button>
+      <button class="btn primary grow" id="fdSave">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE / EDIT FOOD SHEET -->
+<div class="sheet" id="editSheet" hidden>
+  <div class="sheet-body">
+    <div class="sheet-head">
+      <h2 id="efTitle">Create food</h2>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <form id="editForm" class="grid2">
+      <label class="span2">Name<input id="efName" required></label>
+      <label>Brand<input id="efBrand"></label>
+      <label>Barcode<input id="efCode" inputmode="numeric"></label>
+      <label class="span2">Nutrition values are per
+        <select id="efBasis">
+          <option value="100">100 g / 100 ml (like the label table)</option>
+          <option value="serving">1 serving</option>
+        </select>
+      </label>
+      <label>Serving size (g)<input type="number" id="efServing" inputmode="decimal" step="any" min="0" placeholder="optional"></label>
+      <label>Calories<input type="number" id="efKcal" inputmode="decimal" step="any" min="0" required></label>
+      <label>Protein (g)<input type="number" id="efP" inputmode="decimal" step="any" min="0" required></label>
+      <label>Carbs (g)<input type="number" id="efC" inputmode="decimal" step="any" min="0" required></label>
+      <label>Fat (g)<input type="number" id="efF" inputmode="decimal" step="any" min="0" required></label>
+      <button class="btn primary span2" type="submit">Save food</button>
+    </form>
+  </div>
+</div>
+
+<!-- QUICK ADD SHEET -->
+<div class="sheet" id="quickSheet" hidden>
+  <div class="sheet-body">
+    <div class="sheet-head">
+      <h2>Quick add</h2>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <form id="quickForm" class="grid2">
+      <label class="span2">Label<input id="qName" placeholder="e.g. Restaurant burrito"></label>
+      <label>Calories<input type="number" id="qKcal" inputmode="decimal" step="any" min="0"></label>
+      <label>Protein (g)<input type="number" id="qP" inputmode="decimal" step="any" min="0"></label>
+      <label>Carbs (g)<input type="number" id="qC" inputmode="decimal" step="any" min="0"></label>
+      <label>Fat (g)<input type="number" id="qF" inputmode="decimal" step="any" min="0"></label>
+      <div class="muted small span2">Leave calories empty to calculate it from the macros.</div>
+      <button class="btn primary span2" type="submit">Add</button>
+    </form>
+  </div>
+</div>
+
+<!-- SCANNER -->
+<div class="scanner" id="scanner" hidden>
+  <video id="scanVideo" playsinline muted></video>
+  <div class="scan-frame"><div class="laser"></div></div>
+  <div class="scan-ui">
+    <div class="scan-msg" id="scanMsg">Point the camera at a barcode</div>
+    <div class="row center">
+      <button class="btn" id="torchBtn" hidden>Flash</button>
+      <button class="btn" id="scanClose">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
