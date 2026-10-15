@@ -46,9 +46,16 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.MACROS_KEYSTORE_PASSWORD }}
         run: |
           ks="$RUNNER_TEMP/macros.p12"
-          pw="${KEYSTORE_PASSWORD:-macros-tracker}"
+          # drop anything a copy/paste may have added (spaces, newlines, stray symbols)
+          pw=$(printf '%s' "$KEYSTORE_PASSWORD" | tr -cd 'A-Za-z0-9_-')
+          pw="${pw:-macros-tracker}"
           if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$ks"
+            printf '%s' "$KEYSTORE_B64" | tr -cd 'A-Za-z0-9+/=' | base64 -d > "$ks"
+            if ! keytool -list -keystore "$ks" -storetype PKCS12 -storepass "$pw" -alias macros > /dev/null; then
+              echo "::error::Could not open the signing key. Re-check the MACROS_KEYSTORE_BASE64 and MACROS_KEYSTORE_PASSWORD secrets."
+              exit 1
+            fi
+            echo "Using your permanent signing key."
           else
             echo "::warning::MACROS_KEYSTORE_BASE64 secret not set. Using a one-off key, so this APK cannot update an earlier install (uninstall first). See android-app/README.md."
             keytool -genkeypair -keystore "$ks" -storetype PKCS12 -storepass "$pw" -keypass "$pw" \
